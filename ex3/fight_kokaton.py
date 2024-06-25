@@ -152,6 +152,28 @@ class Score():
     def update(self,screen:pg.Surface):
         self.img=self.fonto.render(f"スコア：{self.score}",0,self.color)
         screen.blit(self.img,self.rct)
+        
+class Explosion:
+    def __init__(self,bomb:Bomb):
+        self.imgs=[]
+        self.img1=pg.image.load(f"fig/explosion.gif") # 元画像
+        self.img2=pg.transform.flip(self.img1,True,True) # 上下左右反転バージョン
+        # 画像をリストに追加
+        self.imgs.append(self.img1) 
+        self.imgs.append(self.img2)
+        self.img=self.imgs[0]
+        # center
+        self.rct=self.img.get_rect()
+        self.rct.center=bomb.rct.center 
+        self.life=100
+
+    def update(self,screen:pg.Surface):
+        self.life-=1
+        if self.life>0:
+            if self.life%10<5:
+                screen.blit(self.imgs[0])
+            else:
+                screen.blit(self.imgs[1])
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -163,6 +185,7 @@ def main():
     # bomb = Bomb((255, 0, 0), 10)
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     score=Score()
+    exps=[]
     clock = pg.time.Clock()
     tmr = 0
 
@@ -202,10 +225,15 @@ def main():
                         beams[j]=None
                         bird.change_img(6,screen)
                         score.score+=1 
+                        expl=Explosion(beams[j])
+                        exps.append(expl)
+                        
                         break
                         
+        # リストの更新
         bombs=[bomb for bomb in bombs if bomb is not None]
-        beams=[beam for beam in beams if beam is not None] # リストの更新
+        beams=[beam for beam in beams if beam is not None]
+        exps=[exp for exp in range(len(exps)) if exp > 0]
         
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -215,7 +243,8 @@ def main():
         # if bomb is not None: 
         for bomb in bombs:
             bomb.update(screen)
-        score.update(screen)
+        score.update(screen) 
+                 
         pg.display.update()
         tmr += 1
         clock.tick(50)
